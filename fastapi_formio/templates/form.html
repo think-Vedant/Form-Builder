@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    #formContainer {
+        border: 2px solid red !important;
+    }
+
+    .upper-border {
+        border: 2px solid red !important;
+        color: red !important;
+    }
+
+    /* Custom Submit Button Styling */
+    #formContainer .formio-component-submit button {
+        background: linear-gradient(135deg, #007bff, #0056b3) !important;
+        border: 2px solid #007bff !important;
+        color: white !important;
+        padding: 12px 30px !important;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+        min-width: 150px !important;
+        margin-top: 2rem !important;
+    }
+
+    #formContainer .formio-component-submit button:hover {
+        background: linear-gradient(135deg, #0056b3, #007bff) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3) !important;
+    }
+
+    /* Disable spinner/loading behavior */
+    .formio-component-submit .fa-spinner,
+    .formio-component-submit .spinner-border,
+    .formio-component-submit .loading,
+    .formio-component-submit .fa-circle-o-notch {
+        display: none !important;
+    }
+
+    .formio-loading {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>{{ form.title }}</h1>
+        {% if form.description %}
+        <p class="lead">{{ form.description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+
+<div id="formContainer"></div>
+
+
+<div class="row mt-4">
+    <div class="col">
+        <a href="/" class="btn btn-secondary">Back to Forms</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function injectCustomStyles() {
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #formContainer .formio-component-submit button {
+                background: linear-gradient(135deg, #007bff, #0056b3) !important;
+                border: 2px solid #007bff !important;
+                color: white !important;
+                padding: 10px !important;
+                font-size: 1.1rem !important;
+                font-weight: 600 !important;
+                border-radius: 8px !important;
+                transition: all 0.3s ease !important;
+                min-width: 125px !important;
+                margin-top: 2rem !important;
+            }
+
+            #formContainer .formio-component-submit button:hover {
+                background: linear-gradient(135deg, #0056b3, #007bff) !important;
+                transform: translateY(-2px) !important;
+                box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3) !important;
+            }
+
+            .formio-component-submit .fa-spinner,
+            .formio-component-submit .spinner-border,
+            .formio-component-submit .loading,
+            .formio-component-submit .fa-circle-o-notch {
+                display: none !important;
+            }
+
+            .formio-loading {
+                pointer-events: auto !important;
+                opacity: 1 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            const formSchema = JSON.parse('{{ form.schema | tojson | safe }}');
+            console.log('Form schema loaded:', formSchema);
+
+            Formio.createForm(document.getElementById('formContainer'), formSchema, {
+                readOnly: false,
+                hooks: {
+                    beforeSubmit: (submission, next) => {
+                        next();
+                    }
+                }
+            }).then(function (form) {
+                console.log('Form rendered successfully');
+
+                injectCustomStyles(); // Apply styles after render
+
+                form.on('submit', async function (submission) {
+                    try {
+                        console.log('Form submitted:', submission);
+
+                        // Re-enable submit button immediately & remove loading spinner
+                        const submitButton = form.element.querySelector('.formio-component-submit button');
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.classList.remove('formio-loading');
+                            submitButton.innerHTML = 'Submit'; // Reset label (optional)
+                        }
+
+                        const response = await fetch('/api/forms/{{ form.id }}/submit', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                data: submission.data
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(result.detail || 'Failed to submit form');
+                        }
+
+                        alert('Form submitted successfully!');
+                        form.submission = { data: {} };
+
+                    } catch (error) {
+                        console.error('Error submitting form:', error);
+                        alert('Error submitting form: ' + error.message);
+                    }
+                });
+
+                form.on('error', function (error) {
+                    console.error('Form error:', error);
+                    alert('Form error: ' + error.message);
+                });
+            }).catch(function (err) {
+                console.error('Error rendering form:', err);
+                alert('Error rendering form. Please refresh the page.');
+            });
+        } catch (error) {
+            console.error('Error parsing form schema:', error);
+            alert('Error loading form. Please refresh the page.');
+        }
+    });
+</script>
+{% endblock %}

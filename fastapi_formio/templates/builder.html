@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>{% if is_edit %}Edit Form{% else %}Form Builder{% endif %}</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="form-group">
+            <label for="formTitle">Form Title</label>
+            <input type="text" class="form-control" id="formTitle" value="{% if form %}{{ form.title }}{% endif %}" required>
+        </div>
+    </div>
+    <div class="col">
+        <div class="form-group">
+            <label for="formDescription">Form Description</label>
+            <input type="text" class="form-control" id="formDescription" value="{% if form %}{{ form.description or '' }}{% endif %}">
+        </div>
+    </div>
+</div>
+
+<div id="formBuilder"></div>
+
+<div class="row mt-4">
+    <div class="col">
+        <button onclick="saveForm()" class="btn btn-primary">{% if is_edit %}Update Form{% else %}Save Form{% endif %}</button>
+        <a href="/" class="btn btn-secondary">Cancel</a>
+    </div>
+</div>
+
+<!-- Template data for JavaScript -->
+{% if form %}
+<script type="application/json" id="form-data">
+{{ form.schema | tojson | safe }}
+</script>
+<script type="application/json" id="form-meta">
+{
+    "id": {{ form.id }},
+    "title": {{ form.title | tojson | safe }},
+    "description": {{ (form.description or '') | tojson | safe }},
+    "isEdit": true
+}
+</script>
+{% else %}
+<script type="application/json" id="form-meta">
+{
+    "isEdit": false
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let builder = null;
+    let formData = null;
+    let isEditMode = false;
+
+    // Load form data from template
+    const formMetaElement = document.getElementById('form-meta');
+    if (formMetaElement) {
+        const formMeta = JSON.parse(formMetaElement.textContent);
+        isEditMode = formMeta.isEdit;
+        
+        if (isEditMode) {
+            const formDataElement = document.getElementById('form-data');
+            const formSchema = JSON.parse(formDataElement.textContent);
+            
+            formData = {
+                id: formMeta.id,
+                title: formMeta.title,
+                description: formMeta.description,
+                schema: formSchema
+            };
+        }
+    }
+
+    // Initialize the form builder
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form configuration - use existing schema if in edit mode
+        let formConfig;
+        if (isEditMode && formData) {
+            formConfig = formData.schema;
+        } else {
+            formConfig = {
+                display: 'form',
+                components: []
+            };
+        }
+
+        // Builder options
+        const options = {
+            builder: {
+                basic: {
+                    title: 'Basic Components',
+                    default: true,
+                    weight: 0,
+                    components: {
+                        textfield: true,
+                        textarea: true,
+                        email: true,
+                        phoneNumber: true,
+                        number: true,
+                        password: true,
+                        checkbox: true,
+                        selectboxes: true,
+                        select: true,
+                        radio: true,
+                        button: true,
+                        datetime: true,
+                        day: true,
+                        time: true,
+                        currency: true,
+                        survey: true,
+                        address: false,
+                        signature: true,
+                        file: true
+                    }
+                },
+                advanced: false,
+                layout: {
+                    components: {
+                        table: true,
+                        panel: true,
+                        columns: true,
+                        tabs: true,
+                        well: true,
+                        fieldset: true
+                    }
+                },
+                data: false,
+                premium: false
+            },
+            editForm: {
+                textfield: [
+                    {
+                        key: 'display',
+                        ignore: false
+                    },
+                    {
+                        key: 'data',
+                        ignore: false
+                    },
+                    {
+                        key: 'validation',
+                        ignore: false
+                    }
+                ]
+            }
+        };
+
+        Formio.builder(document.getElementById('formBuilder'), formConfig, options)
+            .then(function(instance) {
+                builder = instance;
+                console.log('Form builder initialized successfully');
+            })
+            .catch(function(err) {
+                console.error('Error initializing form builder:', err);
+                alert('Error initializing form builder. Please refresh the page.');
+            });
+    });
+
+    // Save or update the form
+    async function saveForm() {
+        try {
+            console.log('Starting form save process...');
+            
+            const title = document.getElementById('formTitle').value;
+            const description = document.getElementById('formDescription').value;
+            
+            console.log('Form data:', { title, description });
+            
+            if (!title) {
+                console.error('Form title is required');
+                alert('Please enter a form title');
+                return;
+            }
+
+            if (!builder) {
+                console.error('Form builder not initialized');
+                alert('Form builder not initialized. Please refresh the page.');
+                return;
+            }
+
+            const schema = builder.schema;
+            console.log('Form schema:', JSON.stringify(schema, null, 2));
+
+            const requestData = {
+                title: title,
+                description: description,
+                schema: schema
+            };
+            
+            // Determine if we're creating or updating
+            const url = isEditMode ? `/api/forms/${formData.id}` : '/api/forms/';
+            const method = isEditMode ? 'PUT' : 'POST';
+            
+            console.log(`Sending ${method} request to ${url} with data:`, requestData);
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (!response.ok) {
+                console.error('Server error:', data);
+                throw new Error(data.detail || `Server error: ${response.status}`);
+            }
+
+            console.log(`Form ${isEditMode ? 'updated' : 'saved'} successfully with ID:`, data.id);
+            alert(`Form ${isEditMode ? 'updated' : 'saved'} successfully!`);
+            window.location.href = '/';
+        } catch (error) {
+            console.error('Error saving form:', error);
+            console.error('Error stack:', error.stack);
+            
+            // Show detailed error message
+            let errorMessage = `Error ${isEditMode ? 'updating' : 'saving'} form: `;
+            if (error.message) {
+                errorMessage += error.message;
+            } else {
+                errorMessage += 'Unknown error occurred';
+            }
+            
+            alert(errorMessage);
+        }
+    }
+</script>
+{% endblock %} 

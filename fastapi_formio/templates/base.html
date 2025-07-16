@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Form Builder</title>
+    
+    <!-- Inter Font for Professional Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Form.io CSS -->
+    <link rel="stylesheet" href="https://cdn.form.io/formiojs/formio.full.min.css">
+    
+    <!-- Form.io JavaScript -->
+    <script src="https://cdn.form.io/formiojs/formio.full.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            /* Healthcare-appropriate Color Palette */
+            --primary-blue: #2563eb;
+            --primary-blue-hover: #1d4ed8;
+            --secondary-blue: #e0f2fe;
+            --accent-green: #10b981;
+            --accent-green-hover: #059669;
+            --warning-amber: #f59e0b;
+            --warning-amber-hover: #d97706;
+            --danger-red: #ef4444;
+            --danger-red-hover: #dc2626;
+            
+            /* Neutral Grays */
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            /* Text Colors for WCAG AAA Compliance */
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            
+            /* Background Colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-accent: #f0f9ff;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            
+            /* Spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 0.75rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-secondary);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Typography Hierarchy */
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        h4 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1.4;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        h5 {
+            font-size: 1.125rem;
+            font-weight: 500;
+            line-height: 1.4;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        p {
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #0b1535 100%) !important;
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-md) 0;
+            border: none;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: white !important;
+            letter-spacing: -0.025em;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            padding: var(--spacing-sm) var(--spacing-md) !important;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Container */
+        .main-container {
+            background-color: var(--bg-primary);
+            margin: var(--spacing-xl) auto;
+            padding: var(--spacing-2xl);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            max-width: 1200px;
+            min-height: calc(100vh - 8rem);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-container {
+                margin: var(--spacing-md);
+                padding: var(--spacing-lg);
+                border-radius: var(--radius-md);
+            }
+
+            h1 {
+                font-size: 1.875rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Focus states for accessibility */
+        *:focus {
+            outline: 2px solid var(--primary-blue);
+            outline-offset: 2px;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-heartbeat me-2"></i>
+                Healthcare Form Builder
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/builder">
+                            <i class="fas fa-plus-circle me-1"></i>
+                            Form Builder
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 
